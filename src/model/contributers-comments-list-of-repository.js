@@ -1,3 +1,4 @@
+const chalk = require('chalk')
 const leftPad = require('left-pad')
 const makeAsyncAPIConfig = require('../utils/make-single-or-multiple-async-APIs')
 
@@ -25,6 +26,11 @@ module.exports = async function(repositoryName, noOfDaysForFilterComments) {
     const contributorsIdListArray = []
     let leftPadCount = 1
     contributorsCommentsAndCommitListArray.forEach((data) => {
+        if (typeof data.status !== 'undefined' && data.status === 'error') {
+            console.log('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~')
+            console.log(chalk.red(`Error : ${data.message}`))
+            console.log('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~')
+        }
         if (
             typeof data.author !== 'undefined' &&
             typeof data.author.id !== 'undefined' &&
@@ -125,7 +131,13 @@ module.exports = async function(repositoryName, noOfDaysForFilterComments) {
             }
         }
     })
-    contributorsIdListArray.forEach((value, index) => {
-        console.log(`${leftPad(contributorsCommentsAndCommitListObject[index][value].commentCount, leftPadCount,)} comments, ${contributorsCommentsAndCommitListObject[index][value].name} (${contributorsCommentsAndCommitListObject[index][value].commitCount} commits)`)
-    })
+    if (typeof data.status === 'undefined' && contributorsIdListArray.length === 0) {
+        console.log('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~')
+        console.log(chalk.yellow(`No Data : There is no comments and commits for the ${repositoryName} repository`))
+        console.log('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~')
+    } else {
+        contributorsIdListArray.forEach((value, index) => {
+            console.log(`${leftPad(contributorsCommentsAndCommitListObject[index][value].commentCount, leftPadCount,)} comments, ${contributorsCommentsAndCommitListObject[index][value].name} (${contributorsCommentsAndCommitListObject[index][value].commitCount} commits)`)
+        })
+    }
 }
