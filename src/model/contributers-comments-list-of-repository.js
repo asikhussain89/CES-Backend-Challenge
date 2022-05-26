@@ -9,12 +9,17 @@ const makeAsyncAPIConfig = require('../utils/make-single-or-multiple-async-APIs'
  * Function receive second optional param as number of days which consider as started date from current date
  * If second parameter not received, function will return all data
  */
-module.exports = async function(repositoryName, noOfDaysForFilterComments) {
-    const contributorsCommentsListAPIUrlArray = [
-        `/repos/${repositoryName}/commits`,
-        `/repos/${repositoryName}/issues/comments`,
-        `/repos/${repositoryName}/pulls/comments`,
-    ]
+module.exports = async function(repositoryName, noOfDaysForFilterComments, paginationPerPageCount) {
+    const contributorsCommentsListAPIUrlArray = []
+    if (paginationPerPageCount !== 30) {
+        contributorsCommentsListAPIUrlArray.push(`/repos/${repositoryName}/commits?per_page=${paginationPerPageCount}`)
+        contributorsCommentsListAPIUrlArray.push(`/repos/${repositoryName}/issues/comments?per_page=${paginationPerPageCount}`)
+        contributorsCommentsListAPIUrlArray.push(`/repos/${repositoryName}/pulls/comments?per_page=${paginationPerPageCount}`)
+    } else {
+        contributorsCommentsListAPIUrlArray.push(`/repos/${repositoryName}/commits`)
+        contributorsCommentsListAPIUrlArray.push(`/repos/${repositoryName}/issues/comments`)
+        contributorsCommentsListAPIUrlArray.push(`/repos/${repositoryName}/pulls/comments`)
+    }
     const contributorsCommentsListAPIHttpMethodArray = ['GET', 'GET', 'GET']
     let contributorsCommitsListAPIUrl = `/repos/${repositoryName}/stats/contributors`
     let contributorsCommitsListAPIHttpMethod = 'GET'
@@ -131,13 +136,7 @@ module.exports = async function(repositoryName, noOfDaysForFilterComments) {
             }
         }
     })
-    if (typeof data.status === 'undefined' && contributorsIdListArray.length === 0) {
-        console.log('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~')
-        console.log(chalk.yellow(`No Data : There is no comments and commits for the ${repositoryName} repository`))
-        console.log('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~')
-    } else {
-        contributorsIdListArray.forEach((value, index) => {
-            console.log(`${leftPad(contributorsCommentsAndCommitListObject[index][value].commentCount, leftPadCount,)} comments, ${contributorsCommentsAndCommitListObject[index][value].name} (${contributorsCommentsAndCommitListObject[index][value].commitCount} commits)`)
-        })
-    }
+    contributorsIdListArray.forEach((value, index) => {
+        console.log(`${leftPad(contributorsCommentsAndCommitListObject[index][value].commentCount, leftPadCount,)} comments, ${contributorsCommentsAndCommitListObject[index][value].name} (${contributorsCommentsAndCommitListObject[index][value].commitCount} commits)`)
+    })
 }

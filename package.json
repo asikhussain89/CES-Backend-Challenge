@@ -5,7 +5,7 @@
   "main": "index.js",
   "private": true,
   "scripts": {
-    "start": "node ./src --repo facebook/react --period 20d",
+    "start": "node ./src --repo facebook/react --period 20d --per_page 50",
     "dev": "nodemon ./src/index.js --ext js",
     "eslint": "eslint src/ --ext .js || true",
     "eslint:fix": "eslint src/ --ext .js --fix || true"
