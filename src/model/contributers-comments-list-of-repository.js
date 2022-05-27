@@ -1,6 +1,7 @@
-const chalk = require('chalk')
+const commonConsoleMessageLayout = require('../utils/common-console-message-layout')
 const leftPad = require('left-pad')
 const makeAsyncAPIConfig = require('../utils/make-single-or-multiple-async-APIs')
+const checkGithubRateLimit = require('../utils/check-github-rate-limit-API')
 
 /**
  * 
@@ -10,6 +11,10 @@ const makeAsyncAPIConfig = require('../utils/make-single-or-multiple-async-APIs'
  * If second parameter not received, function will return all data
  */
 module.exports = async function(repositoryName, noOfDaysForFilterComments, paginationPerPageCount) {
+    let isGithubRateLimitReached = await checkGithubRateLimit()
+    if (!isGithubRateLimitReached) {
+        return
+    }
     const contributorsCommentsListAPIUrlArray = []
     if (paginationPerPageCount !== 30) {
         contributorsCommentsListAPIUrlArray.push(`/repos/${repositoryName}/commits?per_page=${paginationPerPageCount}`)
@@ -32,9 +37,7 @@ module.exports = async function(repositoryName, noOfDaysForFilterComments, pagin
     let leftPadCount = 1
     contributorsCommentsAndCommitListArray.forEach((data) => {
         if (typeof data.status !== 'undefined' && data.status === 'error') {
-            console.log('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~')
-            console.log(chalk.red(`Error : ${data.message}`))
-            console.log('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~')
+            commonConsoleMessageLayout(`Error : ${data.message}`, 'red')
         }
         if (
             typeof data.author !== 'undefined' &&
