@@ -13,6 +13,7 @@ const checkGithubRateLimit = require('../utils/check-github-rate-limit-API')
 module.exports = async function(
   repositoryName,
   noOfDaysForFilterComments,
+  paginationPageNumber,
   paginationPerPageCount,
 ) {
   let isGithubRateLimitReached = await checkGithubRateLimit()
@@ -22,21 +23,26 @@ module.exports = async function(
   const contributorsCommentsListAPIUrlArray = []
   if (paginationPerPageCount !== 30) {
     contributorsCommentsListAPIUrlArray.push(
-      `/repos/${repositoryName}/commits?per_page=${paginationPerPageCount}`,
+      `/repos/${repositoryName}/commits?per_page=${paginationPerPageCount}
+      &page=${paginationPageNumber}`,
     )
     contributorsCommentsListAPIUrlArray.push(
-      `/repos/${repositoryName}/issues/comments?per_page=${paginationPerPageCount}`,
+      `/repos/${repositoryName}/issues/comments?per_page=${paginationPerPageCount}
+      &page=${paginationPageNumber}`,
     )
     contributorsCommentsListAPIUrlArray.push(
-      `/repos/${repositoryName}/pulls/comments?per_page=${paginationPerPageCount}`,
+      `/repos/${repositoryName}/pulls/comments?per_page=${paginationPerPageCount}
+      &page=${paginationPageNumber}`,
     )
   } else {
-    contributorsCommentsListAPIUrlArray.push(`/repos/${repositoryName}/commits`)
     contributorsCommentsListAPIUrlArray.push(
-      `/repos/${repositoryName}/issues/comments`,
+      `/repos/${repositoryName}/commits?page=${paginationPageNumber}`,
     )
     contributorsCommentsListAPIUrlArray.push(
-      `/repos/${repositoryName}/pulls/comments`,
+      `/repos/${repositoryName}/issues/comments?page=${paginationPageNumber}`,
+    )
+    contributorsCommentsListAPIUrlArray.push(
+      `/repos/${repositoryName}/pulls/comments?page=${paginationPageNumber}`,
     )
   }
   const contributorsCommentsListAPIHttpMethodArray = ['GET', 'GET', 'GET']

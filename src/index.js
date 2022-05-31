@@ -1,13 +1,13 @@
 const commonConsoleMessageLayout = require('../src/utils/common-console-message-layout')
 const commonConfig = require('./config/common-config')
-const contributorsCommentsListOfRepositoryFunc = require('./model/contributers-comments-list-of-repository')
+const contributorsCommentsListModel = require('./model/contributers-comments-list-of-repository')
 
 if (
   commonConfig.GITHUB_PERSONAL_ACCESS_TOKEN === '<TOKEN>' ||
   commonConfig.GITHUB_PERSONAL_ACCESS_TOKEN === ''
 ) {
   commonConsoleMessageLayout(
-    `Missing Token : Add the Github Personal Access Token in the config/common-config.js file`,
+    'Missing Token : Add the Github Personal Access Token in the config/common-config.js file',
     'red',
   )
 } else if (
@@ -16,6 +16,7 @@ if (
 ) {
   if (process.argv[2] === '--repo') {
     let inputNoOfDaysForFilterComments = 0
+    let inputPaginationPageNumber = 1
     let inputPaginationCount = 30
     process.argv.forEach((argument, argvIndex) => {
       if (argvIndex > 1) {
@@ -30,6 +31,15 @@ if (
         }
         if (
           typeof process.argv[argvIndex] !== 'undefined' &&
+          process.argv[argvIndex] === '--page'
+        ) {
+          inputPaginationPageNumber =
+            typeof process.argv[argvIndex + 1] !== 'undefined'
+              ? process.argv[argvIndex + 1]
+              : inputPaginationPageNumber
+        }
+        if (
+          typeof process.argv[argvIndex] !== 'undefined' &&
           process.argv[argvIndex] === '--per_page'
         ) {
           inputPaginationCount =
@@ -40,9 +50,10 @@ if (
       }
     })
     if (inputPaginationCount > 0 && inputPaginationCount <= 100) {
-      contributorsCommentsListOfRepositoryFunc(
+      contributorsCommentsListModel(
         process.argv[3],
         inputNoOfDaysForFilterComments,
+        inputPaginationPageNumber,
         inputPaginationCount,
       )
     } else {
