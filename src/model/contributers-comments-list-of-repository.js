@@ -13,8 +13,6 @@ const checkGithubRateLimit = require('../utils/check-github-rate-limit-API')
 module.exports = async function(
   repositoryName,
   noOfDaysForFilterComments,
-  // paginationPageNumber,
-  // paginationPerPageCount,
 ) {
   let isGithubRateLimitReached = await checkGithubRateLimit()
   if (!isGithubRateLimitReached) {
