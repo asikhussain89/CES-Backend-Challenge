@@ -16,8 +16,6 @@ if (
 ) {
   if (process.argv[2] === '--repo') {
     let inputNoOfDaysForFilterComments = 0
-    let inputPaginationPageNumber = 1
-    let inputPaginationCount = 30
     process.argv.forEach((argument, argvIndex) => {
       if (argvIndex > 1) {
         if (
@@ -28,40 +26,13 @@ if (
             typeof process.argv[argvIndex + 1] !== 'undefined'
               ? process.argv[argvIndex + 1].slice(0, process.argv[5].length - 1)
               : inputNoOfDaysForFilterComments
-        }
-        if (
-          typeof process.argv[argvIndex] !== 'undefined' &&
-          process.argv[argvIndex] === '--page'
-        ) {
-          inputPaginationPageNumber =
-            typeof process.argv[argvIndex + 1] !== 'undefined'
-              ? process.argv[argvIndex + 1]
-              : inputPaginationPageNumber
-        }
-        if (
-          typeof process.argv[argvIndex] !== 'undefined' &&
-          process.argv[argvIndex] === '--per_page'
-        ) {
-          inputPaginationCount =
-            typeof process.argv[argvIndex + 1] !== 'undefined'
-              ? process.argv[argvIndex + 1]
-              : inputPaginationCount
-        }
+        } // Add additional if block for process any other input like --period in future
       }
     })
-    if (inputPaginationCount > 0 && inputPaginationCount <= 100) {
-      contributorsCommentsListModel(
-        process.argv[3],
-        inputNoOfDaysForFilterComments,
-        inputPaginationPageNumber,
-        inputPaginationCount,
-      )
-    } else {
-      commonConsoleMessageLayout(
-        'Maximum Pagination Count : The --per_page parameter value should be 1 to 100',
-        'red',
-      )
-    }
+    contributorsCommentsListModel(
+      process.argv[3],
+      inputNoOfDaysForFilterComments,
+    )
   } // Add Else if block for process any other parameters ( instead of --repo ) in future
 } else {
   commonConsoleMessageLayout(

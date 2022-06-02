@@ -13,55 +13,81 @@ const checkGithubRateLimit = require('../utils/check-github-rate-limit-API')
 module.exports = async function(
   repositoryName,
   noOfDaysForFilterComments,
-  paginationPageNumber,
-  paginationPerPageCount,
+  // paginationPageNumber,
+  // paginationPerPageCount,
 ) {
   let isGithubRateLimitReached = await checkGithubRateLimit()
   if (!isGithubRateLimitReached) {
     return
   }
-  const contributorsCommentsListAPIUrlArray = []
-  if (paginationPerPageCount !== 30) {
-    contributorsCommentsListAPIUrlArray.push(
-      `/repos/${repositoryName}/commits?per_page=${paginationPerPageCount}
-      &page=${paginationPageNumber}`,
-    )
-    contributorsCommentsListAPIUrlArray.push(
-      `/repos/${repositoryName}/issues/comments?per_page=${paginationPerPageCount}
-      &page=${paginationPageNumber}`,
-    )
-    contributorsCommentsListAPIUrlArray.push(
-      `/repos/${repositoryName}/pulls/comments?per_page=${paginationPerPageCount}
-      &page=${paginationPageNumber}`,
-    )
-  } else {
-    contributorsCommentsListAPIUrlArray.push(
-      `/repos/${repositoryName}/commits?page=${paginationPageNumber}`,
-    )
-    contributorsCommentsListAPIUrlArray.push(
-      `/repos/${repositoryName}/issues/comments?page=${paginationPageNumber}`,
-    )
-    contributorsCommentsListAPIUrlArray.push(
-      `/repos/${repositoryName}/pulls/comments?page=${paginationPageNumber}`,
-    )
-  }
-  const contributorsCommentsListAPIHttpMethodArray = ['GET', 'GET', 'GET']
-  let contributorsCommitsListAPIUrl = `/repos/${repositoryName}/stats/contributors`
-  let contributorsCommitsListAPIHttpMethod = 'GET'
-  contributorsCommentsListAPIUrlArray.push(contributorsCommitsListAPIUrl)
-  contributorsCommentsListAPIHttpMethodArray.push(
-    contributorsCommitsListAPIHttpMethod,
-  )
-  const contributorsCommentsAndCommitListArray =
-    await makeAsyncAPIConfig.makeMultipleAsyncAPIs(
-      contributorsCommentsListAPIUrlArray,
-      contributorsCommentsListAPIHttpMethodArray,
-    )
+  let loadingSymbolArray = ["\\", "|", "/", "-"];
+  let count = 0;
+  let loadingInterval = setInterval(() => {
+    process.stdout.write("\r" + loadingSymbolArray[count++]);
+    count &= 3;
+  }, 250)
+  const contributorsCommentsAndCommitListArray = []
+  let isCommitCommentsApiDone = false
+  let isIssueCommentsApiDone = false
+  let isPullRequestCommentsApiDone = false
+  let pageNumber = 1
+  do {
+    var contributorsCommentsListAPIUrlArray = []
+    if(!isCommitCommentsApiDone) {
+      contributorsCommentsListAPIUrlArray.push(
+        `/repos/${repositoryName}/commits?page=${pageNumber}
+        &per_page=100`,
+      )
+    }
+    if(!isIssueCommentsApiDone) {
+      contributorsCommentsListAPIUrlArray.push(
+        `/repos/${repositoryName}/issues/comments?page=${pageNumber}
+        &per_page=100`,
+      )
+    }
+    if(!isPullRequestCommentsApiDone) {
+      contributorsCommentsListAPIUrlArray.push(
+        `/repos/${repositoryName}/pulls/comments?page=${pageNumber}
+        &per_page=100`,
+      )
+    }
+    const contributorsCommentsListAPIHttpMethodArray = ['GET', 'GET', 'GET']
+    if(pageNumber === 1) {
+      let contributorsCommitsListAPIUrl = `/repos/${repositoryName}/stats/contributors`
+      let contributorsCommitsListAPIHttpMethod = 'GET'
+      contributorsCommentsListAPIUrlArray.push(contributorsCommitsListAPIUrl)
+      contributorsCommentsListAPIHttpMethodArray.push(
+        contributorsCommitsListAPIHttpMethod,
+      )
+    }
+    const contributorsCommentsAndCommitList =
+      await makeAsyncAPIConfig.makeMultipleAsyncAPIs(
+        contributorsCommentsListAPIUrlArray,
+        contributorsCommentsListAPIHttpMethodArray,
+      )
+    contributorsCommentsAndCommitListArray.push(contributorsCommentsAndCommitList)
+    contributorsCommentsAndCommitList.forEach((list, index) => {
+      if((Array.isArray(list) && list.length == 0) || typeof list.message !== 'undefined') {
+        if(index === 1) {
+          isCommitCommentsApiDone = true
+        }
+        if(index === 2) {
+          isIssueCommentsApiDone = true
+        }
+        if(index === 3) {
+          isPullRequestCommentsApiDone = true
+        }
+      }
+    })
+    pageNumber++
+  } while (!isCommitCommentsApiDone && !isIssueCommentsApiDone && !isPullRequestCommentsApiDone)
   const contributorsCommentsAndCommitListObject = []
   const contributorsIdListArray = []
   let leftPadCount = 1
   contributorsCommentsAndCommitListArray.forEach((data) => {
     if (typeof data.status !== 'undefined' && data.status === 'error') {
+      clearInterval(loadingInterval)
+      process.stdout.write('\r\x1b[K')
       commonConsoleMessageLayout(`Error : ${data.message}`, 'red')
     }
     if (
@@ -164,6 +190,8 @@ module.exports = async function(
       }
     }
   })
+  clearInterval(loadingInterval)
+  process.stdout.write('\r\x1b[K')
   contributorsIdListArray.forEach((value, index) => {
     console.log(
       `${leftPad(
